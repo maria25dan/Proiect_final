@@ -1,39 +1,21 @@
 import time
 from unittest import TestCase
-
-from seleniumbase import Driver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
+import selectors
+from base_page import BasePage
 
-class TestLogin(TestCase):
-    LINK = "https://the-internet.herokuapp.com/"
-    LOGIN_BUTTON = (By.XPATH, "//*[@class='fa fa-2x fa-sign-in']")
-    EXPECTED_TEXT = (By.XPATH, "//h2")
-    ELEMENT = (By.XPATH, "/html/body/div[3]/div/div/a")
-    LOGIN = (By.XPATH, "//*[@class='radius']")
-    FLASH = (By.XPATH, "//*[@id='flash']")
-    USER_FIELD = (By.XPATH, "//*[@id='username']")
-    PASS_FIELD = (By.XPATH, "//*[@id='password']")
-    LABELS = (By.XPATH, "//label[@for]")
-    FLASH_SUCCESS = (By.XPATH, "//*[@class='flash success']")
-    LOGOUT = (By.XPATH, "//*[@class='button secondary radius']")
+
+class TestLogin(TestCase, BasePage):
 
     def setUp(self):
         print(f"Se executa ce este in setUp() pentru {self._testMethodName}")
-        self.driver = Driver(browser="chrome",headless=False)
-        self.driver.get(self.LINK)
-        self.driver.maximize_window()
+        self.driver.get(selectors.LINK)
         self.driver.find_element(By.LINK_TEXT, "Form Authentication").click()
         time.sleep(1)
 
     def tearDown(self):
         print(f"Se executa ce este in tearDown() pentru {self._testMethodName}\n")
         self.driver.quit()
-
-    def wait_for_element_to_be_present(self, element_locator, seconds_to_wait):
-        wait = WebDriverWait(self.driver, seconds_to_wait)
-        return wait.until(EC.presence_of_element_located(element_locator))
 
 # ● Test 1
 # - Verifică dacă noul url e corect
@@ -56,13 +38,13 @@ class TestLogin(TestCase):
 # ● Test 3
 # - Verifică dacă textul de pe elementul xpath=//h2 e corect
 
-    def test_login_data(self):
-        #print(f"A inceput testul {self._testMethodName}")
-        #expected_text = self.driver.find_element(*self.EXPECTED_TEXT)
-        #actual_text = "Login Page"
-        #assert expected_text == actual_text, f"Invalid text, expected {expected_text}, but found {actual_text}"
+    def test_login_data_verify_login_display(self):
+        print(f"A inceput testul {self._testMethodName}")
+        actual_text = self.driver.find_element(selectors.ACTUAL_TEXT).text
+        expected_text = "Login Page"
+        assert expected_text == actual_text, f"Invalid text, expected {expected_text}, but found {actual_text}"
         print(f"A inceput subtestul {self._testMethodName}")
-        login_button = self.driver.find_element(*self.LOGIN_BUTTON)
+        login_button = self.driver.find_element(selectors.LOGIN_BUTTON)
         self.assertTrue(login_button.is_displayed(), "Butonul de login nu este afișat pe pagina.")
 
 # ● Test 4
@@ -71,7 +53,7 @@ class TestLogin(TestCase):
 
     def test_href_correct(self):
         print(f"A inceput testul {self._testMethodName}")
-        element = self.driver.find_element(*self.ELEMENT)
+        element = self.driver.find_element(selectors.ELEMENT)
         element_href = element.get_attribute("href")
         self.assertEqual(element_href, 'http://elementalselenium.com/')
 
@@ -82,9 +64,9 @@ class TestLogin(TestCase):
 
     def test_empty_user_pass(self):
         print(f"A inceput testul {self._testMethodName}")
-        login = self.driver.find_element(*self.LOGIN)
+        login = self.driver.find_element(selectors.LOGIN)
         login.click()
-        error_message = self.driver.find_element(*self.FLASH)
+        error_message = self.driver.find_element(selectors.FLASH)
         assert error_message.is_displayed(), f"Error: the error is displayed. "
 
 # ● Test 6
@@ -94,13 +76,13 @@ class TestLogin(TestCase):
 
     def test_invalid_user_pass(self):
         print(f"A inceput testul {self._testMethodName}")
-        user_field = self.driver.find_element(*self.USER_FIELD)
+        user_field = self.driver.find_element(selectors.USER_FIELD)
         user_field.send_keys("blablabla")
-        pass_field = self.driver.find_element(*self.PASS_FIELD)
+        pass_field = self.driver.find_element(selectors.PASS_FIELD)
         pass_field.send_keys(12345678)
-        login = self.driver.find_element(*self.LOGIN)
+        login = self.driver.find_element(selectors.LOGIN)
         login.click()
-        error_message = self.driver.find_element(*self.FLASH).text
+        error_message = self.driver.find_element(selectors.FLASH).text
         expected = 'Your username is invalid!'
         self.assertTrue(expected in error_message, 'Error message text is incorrect')
 
@@ -112,10 +94,8 @@ class TestLogin(TestCase):
 
     def test_verify_login_rejected_when_user_and_pass_empty(self):
         print(f"A inceput testul {self._testMethodName}")
-        user_field = self.driver.find_element(*self.USER_FIELD)
-        pass_field = self.driver.find_element(*self.PASS_FIELD)
-        login = self.driver.find_element(*self.LOGIN).click()
-        error_message = self.driver.find_element(*self.FLASH)
+        self.driver.find_element(selectors.LOGIN).click()
+        error_message = self.driver.find_element(selectors.FLASH)
         assert error_message.is_displayed(), f"Error: the error is not solved. "
 
 # ● Test 8
@@ -126,31 +106,33 @@ class TestLogin(TestCase):
 
     def test_username_and_pass_text(self):
         print(f"A inceput testul {self._testMethodName}")
-        labels = self.driver.find_elements(*self.LABELS)
+        labels = self.driver.find_elements(selectors.LABELS)
         expected_texts = ["Username", "Password"]
-        for label in labels:
-            text = label.text
-        self.assertIn(text, expected_texts, f"Textul de pe {label} este 'Username' si 'Password'.")
+        is_label_correct = True
 
+        for i in range(len(labels)):
+            if labels[i] != expected_texts[i]:
+                is_label_correct = False
+
+        self.assertTrue(is_label_correct is True, f"Textul de pe label nu este corect. Expected: {expected_texts}, "
+                                                  f"actual:{labels}")
 
 # ● Test 9
 # - Completează cu user și pass valide
 # - Click login
-# - Verifică ca noul url CONTINE /secure
+# - Verifică daca noul url CONTINE /secure
 # - Folosește un explicit wait pentru elementul cu clasa ’flash succes’
 # - Verifică dacă elementul cu clasa=’flash succes’ este displayed
 # - Verifică dacă mesajul de pe acest element CONȚINE textul ‘secure area!’
 
     def test_valid_user_pass(self):
         print(f"A inceput testul {self._testMethodName}")
-        user_field = self.driver.find_element(*self.USER_FIELD).send_keys("tomsmith")
-        pass_field = self.driver.find_element(*self.PASS_FIELD).send_keys("SuperSecretPassword!")
-        click_login = self.driver.find_element(*self.LOGIN).click()
-        wait = WebDriverWait(self.driver, 10)
-        wait.until(EC.visibility_of_element_located((self.FLASH_SUCCESS)))
-        succes_message = wait.until(EC.visibility_of_element_located((self.FLASH_SUCCESS)))
+        self.driver.find_element(selectors.USER_FIELD).send_keys("tomsmith")
+        self.driver.find_element(selectors.PASS_FIELD).send_keys("SuperSecretPassword!")
+        self.driver.find_element(selectors.LOGIN).click()
+        succes_message = self.wait_for_element_to_be_present(selectors.FLASH_SUCCESS)
         assert succes_message.is_displayed()
-        succes_message_2 = self.driver.find_element(*self.FLASH).text
+        succes_message_2 = self.driver.find_element(selectors.FLASH).text
         expected = " secure area!"
         self.assertIsNot(succes_message_2, expected, print(f"Mesajul contine textul:  {expected} "))
 # ● Test 10
@@ -161,10 +143,10 @@ class TestLogin(TestCase):
 
     def test_login_logout(self):
         print(f"A inceput testul {self._testMethodName}")
-        user_field = self.driver.find_element(*self.USER_FIELD).send_keys("tomsmith")
-        pass_field = self.driver.find_element(*self.PASS_FIELD).send_keys("SuperSecretPassword!")
-        click_login = self.driver.find_element(*self.LOGIN).click()
-        click_logout = self.driver.find_element(*self.LOGOUT).click()
+        user_field = self.driver.find_element(selectors.USER_FIELD).send_keys("tomsmith")
+        pass_field = self.driver.find_element(selectors.PASS_FIELD).send_keys("SuperSecretPassword!")
+        click_login = self.driver.find_element(selectors.LOGIN).click()
+        click_logout = self.driver.find_element(selectors.LOGOUT).click()
         expected_url = "https://the-internet.herokuapp.com/login"
         actual_url = self.driver.current_url
         assert expected_url == actual_url, f"Invalid URL, expected {expected_url}, but found {actual_url}"
