@@ -1,7 +1,6 @@
 import unittest  # am importat toata libraria unittest
 import HtmlTestRunner
-import test_login
-import test_login_metadata
+from tests import test_login, test_login_metadata
 
 
 class TestSuite(unittest.TestCase):
