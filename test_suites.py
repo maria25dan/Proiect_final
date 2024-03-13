@@ -16,7 +16,6 @@ class TestSuite(unittest.TestCase):
         # lista de teste va fi separata prin virgula
 
         # teste_de_rulat.addTests([]) metoda add tests, apelata fara parametru
-
         teste_de_rulat.addTests([
             unittest.defaultTestLoader.loadTestsFromTestCase(test_login.TestLogin),
             unittest.defaultTestLoader.loadTestsFromTestCase(test_login_metadata.TestWebsiteMetadata)
